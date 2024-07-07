@@ -52,7 +52,7 @@ namespace EntityFramework.Repository.Chats
             return chats;
         }
 
-        public async Task<IEnumerable<ChatSession>> GetRecentChatUser(string userId)
+        public async Task<IEnumerable<ChatSession>> GetRecentChatSession(string userId)
         {
             List<ChatSession> recentUserFromChatRepo = await _dbContext.ChatSession
                 .Where(e => e.FirstUserId == userId || e.SecondUserId == userId)

@@ -79,18 +79,29 @@ namespace TeamManagementProject_Backend.Controllers
             return Ok();
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [Route("GetRecentUserChat")]
         [HttpGet]
         public async Task<IActionResult> GetRecentChatUser(string userId)
         {
-            // IEnumerable<ChatSession> recentUserId = await _chatRepository.GetRecentChatUser(userId);
-            // IEnumerable<IdentityUser> recentUser = from user in recentUserId
-            //                                        join userInDb in _userManager.Users
-            //                                       <CustomUser> on userId = user.FirstUserId == null ? user.SecondUserId : user.FirstUserId equals userInDb.Id
-            //                                        select userInDb;
-            throw new NotImplementedException();
-            // return Ok(recentUser);
+            IEnumerable<ChatSession> recentChatSession = await _chatRepository.GetRecentChatSession(userId);
+            List<CustomUser> recentUser = new List<CustomUser>();
+
+            foreach (ChatSession chatSession in recentChatSession) {
+                try {
+                    CustomUser user = new CustomUser();
+                    if (chatSession.FirstUserId == userId) {
+                        user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.SecondUserId);
+                    } else if (chatSession.SecondUserId == userId) {
+                        user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.FirstUserId);
+                    }
+                    recentUser.Add(user);
+                } catch (Exception) {
+                    continue;
+                }
+            }
+
+            return Ok(recentUser);
         }
 
         [Authorize]
