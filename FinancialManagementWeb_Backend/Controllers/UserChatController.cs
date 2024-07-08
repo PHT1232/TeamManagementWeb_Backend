@@ -71,7 +71,7 @@ namespace TeamManagementProject_Backend.Controllers
             var list = await _chatRepository.GetAll();
             
             try {
-                await _hubContext.Clients.User(chatModel.ReceivedId).SendAsync("MessageListener", chatModel.ReceivedId, chatModel.Message);
+                await _hubContext.Clients.User(chatModel.ReceivedId).SendAsync("MessageListener", chatModel.SentId, chatModel.Message);
 
             } catch (Exception ex) {
                 throw new Exception(ex.ToString());
@@ -80,22 +80,33 @@ namespace TeamManagementProject_Backend.Controllers
         }
 
         [AllowAnonymous]
-        [Route("GetRecentUserChat")]
+        [Route("GetRecentChatUser")]
         [HttpGet]
         public async Task<IActionResult> GetRecentChatUser(string userId)
         {
             IEnumerable<ChatSession> recentChatSession = await _chatRepository.GetRecentChatSession(userId);
-            List<CustomUser> recentUser = new List<CustomUser>();
+            List<UserDisplay> recentUser = new List<UserDisplay>();
 
             foreach (ChatSession chatSession in recentChatSession) {
                 try {
                     CustomUser user = new CustomUser();
+                    string picture = "";
+                    
                     if (chatSession.FirstUserId == userId) {
                         user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.SecondUserId);
                     } else if (chatSession.SecondUserId == userId) {
                         user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.FirstUserId);
                     }
-                    recentUser.Add(user);
+                    picture = await _picturesRepository.GetProfilePicture(user.Id);
+                    
+                    recentUser.Add(new UserDisplay{
+                        UserId = user.Id,
+                        Email = user.Email,
+                        ChatSessionId = chatSession.Id,
+                        UserName = user.UserName,
+                        UserProfile = picture,
+                        Role = "User"
+                    });
                 } catch (Exception) {
                     continue;
                 }
@@ -126,11 +137,11 @@ namespace TeamManagementProject_Backend.Controllers
         public async Task<IActionResult> SearchUsers(string searchValues) {
             var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues) || user.Email.Contains(searchValues) || user.Id.Contains(searchValues)).ToListAsync();
             // var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues)).ToListAsync();
-            var userDisplays = new List<UserDisplay>();
+            List<UserDisplay> userDisplays = new List<UserDisplay>();
 
             foreach (var user in users) {
                 try {
-                    var picture = await _picturesRepository.GetProfilePicture(user.Id);
+                    string picture = await _picturesRepository.GetProfilePicture(user.Id);
                     userDisplays.Add(new UserDisplay{
                                 UserId = user.Id,
                                 Email = user.Email,
