@@ -47,7 +47,7 @@ namespace EntityFramework.Repository.Groups
             List<GroupUsers> groupUsers = await _dbContext.GroupUsers.Where(e => e.UserId.Equals(UserId)).ToListAsync();
             List<Group> groups = new List<Group>();
 
-            foreach (var groupUser in groupUsers)
+            foreach (GroupUsers groupUser in groupUsers)
             {
                 Group group = _dbContext.Groups.FirstOrDefault(e => e.Id.Equals(groupUser.GroupId));
                 groups.Add(group);

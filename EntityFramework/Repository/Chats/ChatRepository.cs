@@ -52,13 +52,35 @@ namespace EntityFramework.Repository.Chats
             return chats;
         }
 
-        public async Task<IEnumerable<ChatSession>> GetRecentChatSession(string userId)
+        // public async Task<IEnumerable<ChatSession>> GetRecentChatSession(string userId)
+        // {
+        //     int lastRow = await _dbContext.ChatSession.CountAsync();
+        //     var lastInt = await _dbContext.ChatSession.LastAsync();
+        //     DateTime lastDate = new DateTime().Date;
+        //     List<ChatSession> recentUserFromChatRepo = await _dbContext.ChatSession
+        //         .OrderBy(e => e.CreatedDate)
+        //         .Where(e => e.FirstUserId == userId || e.SecondUserId == userId)
+        //         .Take(10)
+        //         .ToListAsync();
+
+        //     return recentUserFromChatRepo;
+        // }
+
+        public async Task<List<ChatSession>> GetRecentChatSession(string userId, int lastTakeRow)
         {
             List<ChatSession> recentUserFromChatRepo = await _dbContext.ChatSession
-                .Where(e => e.FirstUserId == userId || e.SecondUserId == userId)
+                .OrderBy(e => e.CreatedDate)
+                .Where(e => e.FirstUserId == userId || e.SecondUserId == userId && e.Id > lastTakeRow)
+                .Take(10)
                 .ToListAsync();
 
             return recentUserFromChatRepo;
+        }
+
+        public async Task ReadMessage(long id) {
+            await _dbContext.Chats
+            .Where(e => e.Id == id)
+            .ExecuteUpdateAsync(x => x.SetProperty(z => z.IsRead, true));
         }
 
         public async Task<IEnumerable<ChatMessages>> GetRecentChatMessagesUser(long chatSessionId)

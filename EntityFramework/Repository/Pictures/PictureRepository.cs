@@ -31,7 +31,7 @@ namespace EntityFramework.Repository.Pictures
         }
 
         public async Task<string> GetProfilePicture(string userId) {
-            var profilePicture = await _dbContext.UserProfilePicture.FirstOrDefaultAsync(e => e.UserId == userId);
+            UserProfilePicture profilePicture = await _dbContext.UserProfilePicture.FirstOrDefaultAsync(e => e.UserId == userId);
             if (profilePicture == null) 
             {
                 return "";
@@ -40,7 +40,7 @@ namespace EntityFramework.Repository.Pictures
         }
 
         public async Task<List<UserProfilePicture>> GetAll() {
-            var userProfile = await _dbContext.UserProfilePicture.ToListAsync();
+            List<UserProfilePicture> userProfile = await _dbContext.UserProfilePicture.ToListAsync();
             return userProfile;
         }
     }

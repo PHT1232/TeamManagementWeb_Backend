@@ -101,9 +101,9 @@ namespace TeamManagementProject_Backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetGroupByUserId(string UserId)
         {
-            var groups = await _groupRepository.GetAllByUserId(UserId);
+            IEnumerable<Group> groups = await _groupRepository.GetAllByUserId(UserId);
             List<GroupListModel> listOfGroupModels = new List<GroupListModel>();
-            foreach (var group in groups)
+            foreach (Group group in groups)
             {
                 GroupListModel model = new GroupListModel();
                 model.Name = group.Name;

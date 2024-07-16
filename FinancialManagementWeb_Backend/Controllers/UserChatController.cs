@@ -63,7 +63,8 @@ namespace TeamManagementProject_Backend.Controllers
             {
                 ChatSessionId = chatSessionid,
                 ChatMessage = chatModel.Message,
-                CreatedDate = DateTime.Now
+                CreatedDate = DateTime.Now,
+                IsRead = false
             };
 
             await _chatRepository.AddMessages(chat);
@@ -84,35 +85,35 @@ namespace TeamManagementProject_Backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRecentChatUser(string userId)
         {
-            IEnumerable<ChatSession> recentChatSession = await _chatRepository.GetRecentChatSession(userId);
-            List<UserDisplay> recentUser = new List<UserDisplay>();
+            IEnumerable<ChatSession> recentChatSession = await _chatRepository.GetRecentChatSession(userId, 1);
+            // List<UserDisplay> recentUser = new List<UserDisplay>();
 
-            foreach (ChatSession chatSession in recentChatSession) {
-                try {
-                    CustomUser user = new CustomUser();
-                    string picture = "";
+            // foreach (ChatSession chatSession in recentChatSession) {
+            //     try {
+            //         CustomUser user = new CustomUser();
+            //         string picture = "";
                     
-                    if (chatSession.FirstUserId == userId) {
-                        user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.SecondUserId);
-                    } else if (chatSession.SecondUserId == userId) {
-                        user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.FirstUserId);
-                    }
-                    picture = await _picturesRepository.GetProfilePicture(user.Id);
+            //         if (chatSession.FirstUserId == userId) {
+            //             user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.SecondUserId);
+            //         } else if (chatSession.SecondUserId == userId) {
+            //             user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.FirstUserId);
+            //         }
+            //         picture = await _picturesRepository.GetProfilePicture(user.Id);
                     
-                    recentUser.Add(new UserDisplay{
-                        UserId = user.Id,
-                        Email = user.Email,
-                        ChatSessionId = chatSession.Id,
-                        UserName = user.UserName,
-                        UserProfile = picture,
-                        Role = "User"
-                    });
-                } catch (Exception) {
-                    continue;
-                }
-            }
+            //         recentUser.Add(new UserDisplay{
+            //             UserId = user.Id,
+            //             Email = user.Email,
+            //             ChatSessionId = chatSession.Id,
+            //             UserName = user.UserName,
+            //             UserProfile = picture,
+            //             Role = "User"
+            //         });
+            //     } catch (Exception) {
+            //         continue;
+            //     }
+            // }
 
-            return Ok(recentUser);
+            return Ok(recentChatSession);
         }
 
         [Authorize]
@@ -130,6 +131,14 @@ namespace TeamManagementProject_Backend.Controllers
         public IActionResult GetUploadFolder()
         {
             return Ok(AppFolders.UserProfilePictures);
+        }
+
+        [AllowAnonymous]
+        [Route("ReadMessages")]
+        [HttpGet]
+        public async Task<IActionResult> ReadMessages(long chatSessionId) {
+            await _chatRepository.ReadMessage(chatSessionId); 
+            return Ok();
         }
 
         [Route("SearchUsers")]
