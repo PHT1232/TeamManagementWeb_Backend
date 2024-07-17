@@ -83,46 +83,62 @@ namespace TeamManagementProject_Backend.Controllers
         [AllowAnonymous]
         [Route("GetRecentChatUser")]
         [HttpGet]
-        public async Task<IActionResult> GetRecentChatUser(string userId)
+        public async Task<IActionResult> GetRecentChatUser(string userId, long lastChatSessionId)
         {
-            IEnumerable<ChatSession> recentChatSession = await _chatRepository.GetRecentChatSession(userId, 1);
-            // List<UserDisplay> recentUser = new List<UserDisplay>();
+            IEnumerable<ChatSession> recentChatSession = await _chatRepository.GetRecentChatSession(userId, lastChatSessionId);
 
-            // foreach (ChatSession chatSession in recentChatSession) {
-            //     try {
-            //         CustomUser user = new CustomUser();
-            //         string picture = "";
-                    
-            //         if (chatSession.FirstUserId == userId) {
-            //             user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.SecondUserId);
-            //         } else if (chatSession.SecondUserId == userId) {
-            //             user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.FirstUserId);
-            //         }
-            //         picture = await _picturesRepository.GetProfilePicture(user.Id);
-                    
-            //         recentUser.Add(new UserDisplay{
-            //             UserId = user.Id,
-            //             Email = user.Email,
-            //             ChatSessionId = chatSession.Id,
-            //             UserName = user.UserName,
-            //             UserProfile = picture,
-            //             Role = "User"
-            //         });
-            //     } catch (Exception) {
-            //         continue;
-            //     }
-            // }
+            UserDisplayPagination userDisplayPagination = new UserDisplayPagination();
+            List<UserDisplay> recentUser = new List<UserDisplay>();
 
-            return Ok(recentChatSession);
+            foreach (ChatSession chatSession in recentChatSession) {
+                try {
+                    CustomUser user = new CustomUser();
+                    string picture = "";
+                    
+                    if (chatSession.FirstUserId == userId) {
+                        user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.SecondUserId);
+                    } else if (chatSession.SecondUserId == userId) {
+                        user = await _userManager.Users.FirstAsync(e => e.Id == chatSession.FirstUserId);
+                    }
+                    picture = await _picturesRepository.GetProfilePicture(user.Id);
+                    
+                    recentUser.Add(new UserDisplay{
+                        UserId = user.Id,
+                        Email = user.Email,
+                        ChatSessionId = chatSession.Id,
+                        UserName = user.UserName,
+                        UserProfile = picture,
+                        Role = "User"
+                    });
+                } catch (Exception) {
+                    continue;
+                }
+            }
+
+            userDisplayPagination.LastChatSessionId = recentChatSession.Last().Id;
+            userDisplayPagination.Users = recentUser;
+
+            return Ok(userDisplayPagination);
         }
 
         [Authorize]
         [Route("GetRecentChatMessage")]
         [HttpGet]
-        public async Task<IActionResult> GetRecentChatMessage(string chatSessionId) 
-        {
+        public async Task<IActionResult> GetRecentChatMessage(long chatSessionId, DateTime lastMessageSentDate) 
+        {   
+            List<ChatMessages> chats = await _chatRepository.GetRecentChatMessagesUser(chatSessionId, lastMessageSentDate);
+            ChatMessageDisplayPagination messageDisplayPagination = new ChatMessageDisplayPagination 
+            {
+                LastChatDate = chats.Last().CreatedDate,
+                chats = chats.Select(e => new ChatMessageDisplay {
+                    Id = e.Id,
+                    ChatMessage = e.ChatMessage,
+                    CreatedDate = e.CreatedDate,
+                    IsRead = e.IsRead
+                }).ToList()
+            };
 
-            throw new NotImplementedException();
+            return Ok(messageDisplayPagination);
         }
 
         [AllowAnonymous]
@@ -144,7 +160,7 @@ namespace TeamManagementProject_Backend.Controllers
         [Route("SearchUsers")]
         [HttpGet]
         public async Task<IActionResult> SearchUsers(string searchValues) {
-            var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues) || user.Email.Contains(searchValues) || user.Id.Contains(searchValues)).ToListAsync();
+            var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues) || user.Email.Contains(searchValues) || user.Id.Contains(searchValues)).Take(15).ToListAsync();
             // var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues)).ToListAsync();
             List<UserDisplay> userDisplays = new List<UserDisplay>();
 

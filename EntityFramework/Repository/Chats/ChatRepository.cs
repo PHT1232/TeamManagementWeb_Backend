@@ -46,7 +46,7 @@ namespace EntityFramework.Repository.Chats
             return chat;
         }
 
-        public async Task<IEnumerable<ChatMessages>> GetAll()
+        public async Task<List<ChatMessages>> GetAll()
         {
             List<ChatMessages> chats = await _dbContext.Chats.ToListAsync();
             return chats;
@@ -66,7 +66,7 @@ namespace EntityFramework.Repository.Chats
         //     return recentUserFromChatRepo;
         // }
 
-        public async Task<List<ChatSession>> GetRecentChatSession(string userId, int lastTakeRow)
+        public async Task<List<ChatSession>> GetRecentChatSession(string userId, long lastTakeRow)
         {
             List<ChatSession> recentUserFromChatRepo = await _dbContext.ChatSession
                 .OrderBy(e => e.CreatedDate)
@@ -83,10 +83,13 @@ namespace EntityFramework.Repository.Chats
             .ExecuteUpdateAsync(x => x.SetProperty(z => z.IsRead, true));
         }
 
-        public async Task<IEnumerable<ChatMessages>> GetRecentChatMessagesUser(long chatSessionId)
+        public async Task<List<ChatMessages>> GetRecentChatMessagesUser(long chatSessionId, DateTime lastMessageSentDate)
         {
-            List<ChatMessages> chats = await _dbContext.Chats.
-                Where(e => e.ChatSessionId == chatSessionId).ToListAsync();
+            List<ChatMessages> chats = await _dbContext.Chats
+                .OrderByDescending(e => e.CreatedDate)
+                .Where(e => e.ChatSessionId == chatSessionId && e.CreatedDate < lastMessageSentDate)
+                .Take(10)
+                .ToListAsync();
 
             return chats;
         }
