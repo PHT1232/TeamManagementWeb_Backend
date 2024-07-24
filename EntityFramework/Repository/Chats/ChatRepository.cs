@@ -77,10 +77,17 @@ namespace EntityFramework.Repository.Chats
             return recentUserFromChatRepo;
         }
 
-        public async Task ReadMessage(long id) {
+        public async Task ReadMessage(long id) 
+        {
             await _dbContext.Chats
             .Where(e => e.Id == id)
             .ExecuteUpdateAsync(x => x.SetProperty(z => z.IsRead, true));
+        }
+
+        public async Task<ChatSession> GetSessionAsync(long id) 
+        {
+            ChatSession chatSession = await _dbContext.ChatSession.FirstOrDefaultAsync(e => e.Id == id);
+            return chatSession;
         }
 
         public async Task<List<ChatMessages>> GetRecentChatMessagesUser(long chatSessionId, DateTime lastMessageSentDate)

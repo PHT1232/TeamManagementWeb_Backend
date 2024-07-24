@@ -62,6 +62,7 @@ namespace TeamManagementProject_Backend.Controllers
             ChatMessages chat = new ChatMessages
             {
                 ChatSessionId = chatSessionid,
+                SentUserId = chatModel.SentId,
                 ChatMessage = chatModel.Message,
                 CreatedDate = DateTime.Now,
                 IsRead = false
