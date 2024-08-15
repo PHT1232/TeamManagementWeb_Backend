@@ -101,6 +101,12 @@ namespace EntityFramework.Repository.Chats
             return chats;
         }
 
+        public async Task<ChatSession> GetSessionByUserId(string sentUserId, string receiveUserId) 
+        {
+            ChatSession chatSession = await _dbContext.ChatSession.FirstOrDefaultAsync(e => (e.FirstUserId == sentUserId && e.SecondUserId == receiveUserId) || (e.FirstUserId == receiveUserId && e.SecondUserId == sentUserId));
+            return chatSession;
+        }
+
         public async Task Update(ChatMessages entity, long id)
         {
             throw new NotImplementedException();

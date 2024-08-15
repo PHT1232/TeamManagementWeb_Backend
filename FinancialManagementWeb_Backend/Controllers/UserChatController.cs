@@ -125,9 +125,10 @@ namespace TeamManagementProject_Backend.Controllers
         [Authorize]
         [Route("GetRecentChatMessage")]
         [HttpGet]
-        public async Task<IActionResult> GetRecentChatMessage(long chatSessionId, DateTime lastMessageSentDate) 
+        public async Task<IActionResult> GetRecentChatMessage(long chatSessionId, string lastMessageSentDate) 
         {   
-            List<ChatMessages> chats = await _chatRepository.GetRecentChatMessagesUser(chatSessionId, lastMessageSentDate);
+            DateTime date =DateTime.Parse(lastMessageSentDate);
+            List<ChatMessages> chats = await _chatRepository.GetRecentChatMessagesUser(chatSessionId, date);
             ChatMessageDisplayPagination messageDisplayPagination = new ChatMessageDisplayPagination 
             {
                 LastChatDate = chats.Last().CreatedDate,
@@ -160,21 +161,27 @@ namespace TeamManagementProject_Backend.Controllers
 
         [Route("SearchUsers")]
         [HttpGet]
-        public async Task<IActionResult> SearchUsers(string searchValues) {
-            var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues) || user.Email.Contains(searchValues) || user.Id.Contains(searchValues)).Take(15).ToListAsync();
+        public async Task<IActionResult> SearchUsers(string searchWho, string whoSearch) {
+            var users = await _userManager.Users.Where(user => user.UserName.Contains(searchWho) || user.Email.Contains(searchWho) || user.Id.Contains(searchWho)).Take(15).ToListAsync();
             // var users = await _userManager.Users.Where(user => user.UserName.Contains(searchValues)).ToListAsync();
             List<UserDisplay> userDisplays = new List<UserDisplay>();
 
             foreach (var user in users) {
                 try {
+                    bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+                    if (isAdmin || user.Id.Equals(whoSearch)) {
+                        continue;
+                    }
                     string picture = await _picturesRepository.GetProfilePicture(user.Id);
+                    ChatSession chatSession = await _chatRepository.GetSessionByUserId(whoSearch, user.Id);
                     userDisplays.Add(new UserDisplay{
                                 UserId = user.Id,
                                 Email = user.Email,
+                                ChatSessionId = chatSession == null ? 0 : chatSession.Id,
                                 UserName = user.UserName,
                                 UserProfile = picture,
                                 Role = "User",
-                             });
+                            });
                 } catch (Exception) {
                     continue;
                 }

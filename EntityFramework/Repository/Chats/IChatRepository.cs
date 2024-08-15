@@ -16,6 +16,7 @@ namespace EntityFramework.Repository.Chats
         Task<List<ChatSession>> GetRecentChatSession(string userId, long lastTakeRow);
         Task<List<ChatMessages>> GetRecentChatMessagesUser(long chatSessionId, DateTime lastMessageSentDate);
         Task<ChatSession> GetSessionAsync(long id);
+        Task<ChatSession> GetSessionByUserId(string sentUserId, string receiveUserId);
         Task AddMessages(ChatMessages entity);
         Task<long> AddSessionAndGetId(ChatSession entity);
         Task ReadMessage(long Id);
