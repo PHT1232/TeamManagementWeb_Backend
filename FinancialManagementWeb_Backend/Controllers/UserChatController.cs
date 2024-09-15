@@ -134,6 +134,7 @@ namespace TeamManagementProject_Backend.Controllers
                 LastChatDate = chats.Last().CreatedDate,
                 chats = chats.Select(e => new ChatMessageDisplay {
                     Id = e.Id,
+                    SentUserId = e.SentUserId,
                     ChatMessage = e.ChatMessage,
                     CreatedDate = e.CreatedDate,
                     IsRead = e.IsRead

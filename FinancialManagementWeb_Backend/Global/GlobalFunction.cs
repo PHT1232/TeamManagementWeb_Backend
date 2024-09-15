@@ -23,7 +23,7 @@ namespace TeamManagementProject_Backend.Global
 
             string extension = Path.GetExtension(importFile.FileName);
 
-            string trustedFileNameForFileStorage = string.Format("{0}." + extension, Path.GetRandomFileName().Replace(".", string.Empty));
+            string trustedFileNameForFileStorage = string.Format("{0}" + extension, Path.GetRandomFileName().Replace(".", string.Empty));
 
             string uploadFilePath = Path.Combine(folderPath, trustedFileNameForFileStorage);
 
