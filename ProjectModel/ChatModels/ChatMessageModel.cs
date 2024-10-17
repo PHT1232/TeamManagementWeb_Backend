@@ -8,9 +8,10 @@ namespace ProjectModel.ChatModels
 {
     public class ChatMessageModel
     {
-        public long ChatSessionId { get; set; }
-        public string SentId { get; set; }
-        public string ReceivedId { get; set; }
-        public string Message { get; set; }
+        public long Id { get; set; }
+        public string SentUserId { get; set; }
+        public string ChatMessage { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public bool IsRead { get; set; }
     }
 }

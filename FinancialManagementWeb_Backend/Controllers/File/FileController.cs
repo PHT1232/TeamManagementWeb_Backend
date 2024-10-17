@@ -25,7 +25,7 @@ namespace TeamManagementProject_Backend.Controllers.File
         public IActionResult GetUserProfile(string user, string fileName) {
             string filePath = "";
             
-            if (fileName == null)
+            if (fileName == null || fileName == "undefined")
             {
                 filePath = Path.Combine(AppFolders.UserDefaultProfilePictures + "/", "icons8-user-default-96.png");
             } else 

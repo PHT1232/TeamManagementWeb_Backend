@@ -22,6 +22,14 @@ namespace EntityFramework.Repository.Chats
         {
             await _dbContext.Chats.AddAsync(entity);
             await _dbContext.SaveChangesAsync();
+        }        
+        
+        public async Task<ChatMessages> AddMessagesAndGetData(ChatMessages entity)
+        {
+            await _dbContext.Chats.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
+
+            return entity;
         }
 
         public async Task<long> AddSessionAndGetId(ChatSession entity)
@@ -94,11 +102,11 @@ namespace EntityFramework.Repository.Chats
         {
             List<ChatMessages> chats = await _dbContext.Chats
                 .OrderByDescending(e => e.CreatedDate)
-                .Where(e => e.ChatSessionId == chatSessionId && e.CreatedDate < lastMessageSentDate)
-                .Take(10)
+                .Where(e => e.ChatSessionId == chatSessionId && e.CreatedDate <= lastMessageSentDate)
+                .Take(15)
                 .ToListAsync();
 
-            return chats;
+            return chats.OrderBy(e => e.CreatedDate).ToList();
         }
 
         public async Task<ChatSession> GetSessionByUserId(string sentUserId, string receiveUserId) 

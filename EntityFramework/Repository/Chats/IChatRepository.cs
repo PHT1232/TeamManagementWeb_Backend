@@ -18,6 +18,7 @@ namespace EntityFramework.Repository.Chats
         Task<ChatSession> GetSessionAsync(long id);
         Task<ChatSession> GetSessionByUserId(string sentUserId, string receiveUserId);
         Task AddMessages(ChatMessages entity);
+        Task<ChatMessages> AddMessagesAndGetData(ChatMessages entity);
         Task<long> AddSessionAndGetId(ChatSession entity);
         Task ReadMessage(long Id);
         Task Update(ChatMessages entity, long id);

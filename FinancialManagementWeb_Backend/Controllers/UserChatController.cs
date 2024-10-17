@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using ProjectModel.AuthModel;
 using ProjectModel.ChatModels;
 using TeamManagementProject_Backend.Controllers.Hubs;
@@ -39,7 +40,7 @@ namespace TeamManagementProject_Backend.Controllers
         [AllowAnonymous]
         [Route("SendMessage")]
         [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody] ChatMessageModel chatModel)
+        public async Task<IActionResult> SendMessage([FromBody] ChatMessageInsertModel chatModel)
         {
             if (chatModel == null)
             {
@@ -68,13 +69,17 @@ namespace TeamManagementProject_Backend.Controllers
                 IsRead = false
             };
 
-            await _chatRepository.AddMessages(chat);
+            ChatMessages chatDb = await _chatRepository.AddMessagesAndGetData(chat);
 
-            var list = await _chatRepository.GetAll();
-            
             try {
-                await _hubContext.Clients.User(chatModel.ReceivedId).SendAsync("MessageListener", chatModel.SentId, chatModel.Message);
-
+                ChatMessageModel chatMessageModel = new ChatMessageModel
+                {
+                    Id = chatDb.Id,
+                    SentUserId = chatDb.SentUserId,
+                    ChatMessage = chatDb.ChatMessage,
+                    CreatedDate = chatDb.CreatedDate,
+                };
+                await _hubContext.Clients.User(chatModel.ReceivedId).SendAsync("MessageListener", chatMessageModel);
             } catch (Exception ex) {
                 throw new Exception(ex.ToString());
             }
@@ -122,24 +127,75 @@ namespace TeamManagementProject_Backend.Controllers
             return Ok(userDisplayPagination);
         }
 
+        private ChatMessageModel CreateChatMessageModelObject(ChatMessages chatMessages)
+        {
+            ChatMessageModel chatMessageModel = new ChatMessageModel();
+
+            chatMessageModel.Id = chatMessages.Id;
+            chatMessageModel.SentUserId = chatMessages.SentUserId;
+            chatMessageModel.ChatMessage = chatMessages.ChatMessage;
+            chatMessageModel.CreatedDate = chatMessages.CreatedDate;
+            chatMessageModel.IsRead = chatMessages.IsRead;
+
+            return chatMessageModel;
+        }
+
         [Authorize]
         [Route("GetRecentChatMessage")]
         [HttpGet]
         public async Task<IActionResult> GetRecentChatMessage(long chatSessionId, string lastMessageSentDate) 
         {   
-            DateTime date =DateTime.Parse(lastMessageSentDate);
+            DateTime date = DateTime.Parse(lastMessageSentDate);
             List<ChatMessages> chats = await _chatRepository.GetRecentChatMessagesUser(chatSessionId, date);
-            ChatMessageDisplayPagination messageDisplayPagination = new ChatMessageDisplayPagination 
+
+            ChatMessageDisplayPagination messageDisplayPagination = new ChatMessageDisplayPagination();
+            messageDisplayPagination.chats = new List<ChatMessageDisplay>();
+            messageDisplayPagination.LastChatDate = chats.Last().CreatedDate;
+
+            ChatMessageDisplay chatMessageDisplay = new ChatMessageDisplay();
+            chatMessageDisplay.ListOfChatMessage = new List<ChatMessageModel>();
+
+            for (int i = 0; i < chats.Count() - 1; i++) 
             {
-                LastChatDate = chats.Last().CreatedDate,
-                chats = chats.Select(e => new ChatMessageDisplay {
-                    Id = e.Id,
-                    SentUserId = e.SentUserId,
-                    ChatMessage = e.ChatMessage,
-                    CreatedDate = e.CreatedDate,
-                    IsRead = e.IsRead
-                }).ToList()
-            };
+
+                if (chats[i].CreatedDate.Day != chats[i + 1].CreatedDate.Day) 
+                {
+                    if (chatMessageDisplay.ListOfChatMessage.IsNullOrEmpty())
+                    {
+                        chatMessageDisplay.ChatDate = chats[i].CreatedDate;
+
+                        chatMessageDisplay.ListOfChatMessage.Add(CreateChatMessageModelObject(chats[i]));
+                    }
+
+                    messageDisplayPagination.chats.Add(chatMessageDisplay);
+                    
+                    chatMessageDisplay = new ChatMessageDisplay();
+                    chatMessageDisplay.ListOfChatMessage = new List<ChatMessageModel>();
+
+                    continue;
+                }
+
+                int chatHour = chats[i + 1].CreatedDate.Hour - chats[i].CreatedDate.Hour;
+                if (chatHour < 1) {
+                    chatMessageDisplay.ChatDate = chats[i].CreatedDate;
+                    if (chatMessageDisplay.ListOfChatMessage.IsNullOrEmpty())
+                    {
+                        chatMessageDisplay.ListOfChatMessage.Add(CreateChatMessageModelObject(chats[i]));
+                        chatMessageDisplay.ListOfChatMessage.Add(CreateChatMessageModelObject(chats[i + 1]));
+                    } else
+                    {
+                        chatMessageDisplay.ListOfChatMessage.Add(CreateChatMessageModelObject(chats[i + 1]));
+                    }
+                }
+                else
+                {
+                    messageDisplayPagination.chats.Add(chatMessageDisplay);
+
+                    chatMessageDisplay = new ChatMessageDisplay();
+                    chatMessageDisplay.ListOfChatMessage = new List<ChatMessageModel>();
+                }
+            }
+            messageDisplayPagination.chats.Add(chatMessageDisplay);
 
             return Ok(messageDisplayPagination);
         }

@@ -55,7 +55,7 @@ namespace TeamManagementProject_Backend.Controllers
         [Authorize]
         [Route("SendMessage")]
         [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody] ChatMessageModel chatModel)
+        public async Task<IActionResult> SendMessage([FromBody] ChatMessageInsertModel chatModel)
         {
             if (chatModel == null)
             {
