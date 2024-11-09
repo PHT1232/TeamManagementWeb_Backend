@@ -1,7 +1,9 @@
 ﻿using EntityFramework.DbEntities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using ProjectModel.AuthModel;
 using System.IdentityModel.Tokens.Jwt;

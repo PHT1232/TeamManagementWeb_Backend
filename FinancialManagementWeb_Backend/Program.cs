@@ -16,6 +16,7 @@ using Microsoft.Extensions.FileProviders;
 using EntityFramework.Repository.Pictures;
 using TeamManagementProject_Backend.Global;
 using EntityFramework.DbEntities;
+using TeamManagementProject_Backend.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigurationManager configuration = builder.Configuration;
@@ -86,7 +87,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", builder => builder
-        .WithOrigins("http://192.168.1.12:4200")
+        .WithOrigins("http://192.168.1.9:4200")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
@@ -96,12 +97,14 @@ AppFolders.Init(builder.Environment);
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseExceptionHandler("/error");
 
@@ -116,5 +119,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHub<ChatHub>("/api/chat");
+
+app.UseMiddleware<EncryptionMiddleware>();
 
 app.Run();

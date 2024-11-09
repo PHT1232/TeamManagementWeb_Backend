@@ -13,6 +13,7 @@ using ProjectModel.AuthModel;
 using ProjectModel.ChatModels;
 using TeamManagementProject_Backend.Controllers.Hubs;
 using TeamManagementProject_Backend.Global;
+using TeamManagementProject_Backend.Helpers;
 
 namespace TeamManagementProject_Backend.Controllers
 {
@@ -37,6 +38,55 @@ namespace TeamManagementProject_Backend.Controllers
             _hubContext = hubContext;
         }
 
+        //[AllowAnonymous]
+        //[Route("SendMessage")]
+        //[HttpPost]
+        //public async Task<IActionResult> SendMessage([FromBody] ChatMessageInsertModel chatModel)
+        //{
+        //    if (chatModel == null)
+        //    {
+        //        throw new("Chat is this real ?");
+        //    }
+            
+        //    long chatSessionid = chatModel.ChatSessionId;
+
+        //    if (chatSessionid == 0)
+        //    {
+        //        ChatSession chatSession = new ChatSession
+        //        {
+        //            FirstUserId = chatModel.SentId,
+        //            SecondUserId = chatModel.ReceivedId,
+        //            CreatedDate = DateTime.Now,
+        //        };
+        //        chatSessionid = await _chatRepository.AddSessionAndGetId(chatSession);
+        //    }
+
+        //    ChatMessages chat = new ChatMessages
+        //    {
+        //        ChatSessionId = chatSessionid,
+        //        SentUserId = chatModel.SentId,
+        //        ChatMessage = chatModel.Message,
+        //        CreatedDate = DateTime.Now,
+        //        IsRead = false
+        //    };
+
+        //    ChatMessages chatDb = await _chatRepository.AddMessagesAndGetData(chat);
+
+        //    try {
+        //        ChatMessageModel chatMessageModel = new ChatMessageModel
+        //        {
+        //            Id = chatDb.Id,
+        //            SentUserId = chatDb.SentUserId,
+        //            ChatMessage = chatDb.ChatMessage,
+        //            CreatedDate = chatDb.CreatedDate,
+        //        };
+        //        await _hubContext.Clients.User(chatModel.ReceivedId).SendAsync("MessageListener", chatMessageModel);
+        //    } catch (Exception ex) {
+        //        throw new Exception(ex.ToString());
+        //    }
+        //    return Ok();
+        //}
+
         [AllowAnonymous]
         [Route("SendMessage")]
         [HttpPost]
@@ -46,44 +96,19 @@ namespace TeamManagementProject_Backend.Controllers
             {
                 throw new("Chat is this real ?");
             }
-            
-            long chatSessionid = chatModel.ChatSessionId;
-
-            if (chatSessionid == 0)
+            ChatMessageModel chatMessageModel = new ChatMessageModel
             {
-                ChatSession chatSession = new ChatSession
-                {
-                    FirstUserId = chatModel.SentId,
-                    SecondUserId = chatModel.ReceivedId,
-                    CreatedDate = DateTime.Now,
-                };
-                chatSessionid = await _chatRepository.AddSessionAndGetId(chatSession);
-            }
-
-            ChatMessages chat = new ChatMessages
-            {
-                ChatSessionId = chatSessionid,
+                Id = chatModel.ChatSessionId,
                 SentUserId = chatModel.SentId,
                 ChatMessage = chatModel.Message,
                 CreatedDate = DateTime.Now,
-                IsRead = false
             };
-
-            ChatMessages chatDb = await _chatRepository.AddMessagesAndGetData(chat);
-
             try {
-                ChatMessageModel chatMessageModel = new ChatMessageModel
-                {
-                    Id = chatDb.Id,
-                    SentUserId = chatDb.SentUserId,
-                    ChatMessage = chatDb.ChatMessage,
-                    CreatedDate = chatDb.CreatedDate,
-                };
                 await _hubContext.Clients.User(chatModel.ReceivedId).SendAsync("MessageListener", chatMessageModel);
             } catch (Exception ex) {
                 throw new Exception(ex.ToString());
             }
-            return Ok();
+            return Ok(chatMessageModel);
         }
 
         [AllowAnonymous]
